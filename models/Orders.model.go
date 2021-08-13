@@ -29,5 +29,6 @@ type Orders struct {
 	Service           Services          `json:"service"`
 	SubService        SubServices       `json:"subService"`
 	ServiceOptions    []ServicesOptions `json:"serviceOptions" gorm:"many2many:order_services_option;"`
+	User              User              `json:"user" gorm:"foreignKey:UserID;references:ID"`
 	gorm.Model
 }

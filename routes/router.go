@@ -96,8 +96,19 @@ func Setup() {
 	// Orders
 	orders := r.Group("orders")
 	orders.POST("/store", controllers.StoreOrder)
-	orders.GET("/finishOrderFromUser/:id", controllers.FinishOrderFromUser)
+	orders.POST("/finishOrderFromUser", controllers.FinishOrderFromUser)
 	orders.GET("/show", controllers.ShowOrder)
+	orders.GET("/new/index", controllers.IndexNewOrders)
+	orders.GET("/inWork/index", controllers.IndexInWorkOrders)
+	orders.GET("/ending/index", controllers.IndexEndingOrders)
+	orders.GET("/viewOrder/:id", controllers.ViewOrder)
+
+	suppliers := r.Group("/suppliers")
+	suppliers.GET("/IndexNewSupplierJoinRequest", controllers.IndexNewSupplierJoinRequest)
+	suppliers.GET("/IndexActiveSupplier", controllers.IndexActiveSupplier)
+	suppliers.GET("/IndexBlockListSupplier", controllers.IndexBlockListSupplier)
+	suppliers.GET("/approve/:id", controllers.ApproveSupplier)
+	suppliers.GET("/block/:id", controllers.BlockSupplier)
 
 	r.Run(":8082")
 }

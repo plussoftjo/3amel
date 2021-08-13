@@ -37,5 +37,8 @@ func SetupDB() {
 	// Orders
 	database.AutoMigrate(&models.Orders{})
 
+	// Rates
+	database.AutoMigrate(&models.UserRate{})
+
 	DB = database
 }

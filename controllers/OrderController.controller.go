@@ -32,10 +32,10 @@ func StoreOrder(c *gin.Context) {
 
 // FinishOrderFromUser ..
 func FinishOrderFromUser(c *gin.Context) {
-	ID := c.Param("id")
-
+	var userRate models.UserRate
+	c.ShouldBindJSON(&userRate)
 	var order models.Orders
-	err := config.DB.Where("id = ?", ID).First(&order).Error
+	err := config.DB.Where("id = ?", userRate.OrderID).First(&order).Error
 	if err != nil {
 		c.JSON(500, gin.H{
 			"err": err.Error(),
@@ -44,8 +44,9 @@ func FinishOrderFromUser(c *gin.Context) {
 	}
 
 	order.UserRate = true
-
 	config.DB.Save(&order)
+
+	config.DB.Create(&userRate)
 
 	c.JSON(200, gin.H{
 		"message": "success",
@@ -54,10 +55,45 @@ func FinishOrderFromUser(c *gin.Context) {
 
 func ShowOrder(c *gin.Context) {
 	var order models.Orders
-
 	config.DB.Scopes(models.OrdersWithDetails).Where("id = ?", 3).First(&order)
 
 	c.JSON(200, gin.H{
 		"order": order,
 	})
+}
+
+// IndexNewOrders ..
+func IndexNewOrders(c *gin.Context) {
+
+	var orders []models.Orders
+	config.DB.Scopes(models.OrdersWithDetails).Order("id desc").Where("status = ?", 0).Find(&orders)
+
+	c.JSON(200, orders)
+}
+
+// IndexInWorkOrders ..
+func IndexInWorkOrders(c *gin.Context) {
+
+	var orders []models.Orders
+	config.DB.Scopes(models.OrdersWithDetails).Order("id desc").Where("status = ?", 1).Find(&orders)
+
+	c.JSON(200, orders)
+}
+
+// IndexEndingOrders ..
+func IndexEndingOrders(c *gin.Context) {
+
+	var orders []models.Orders
+	config.DB.Scopes(models.OrdersWithDetails).Order("id desc").Where("status = ?", 2).Find(&orders)
+
+	c.JSON(200, orders)
+}
+
+// ShowOrder ..
+func ViewOrder(c *gin.Context) {
+	ID := c.Param("id")
+	var order models.Orders
+	config.DB.Where("id = ?", ID).Preload("User").Scopes(models.OrdersWithDetails).First(&order)
+
+	c.JSON(200, order)
 }
