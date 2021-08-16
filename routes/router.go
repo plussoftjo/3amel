@@ -110,5 +110,42 @@ func Setup() {
 	suppliers.GET("/approve/:id", controllers.ApproveSupplier)
 	suppliers.GET("/block/:id", controllers.BlockSupplier)
 
+	// ---------- Countries & Cites & Areas ------------ //
+	countries := r.Group("/countries")
+	countries.POST("/store", controllers.StoreCountry)
+	countries.GET("/index", controllers.IndexCountries)
+	countries.GET("/destroy/:id", controllers.DestroyCountry)
+	countries.POST("/update", controllers.UpdateCountry)
+
+	cites := r.Group("/cites")
+	cites.POST("/store", controllers.StoreCity)
+	cites.GET("/index", controllers.IndexCites)
+	cites.GET("/destroy/:id", controllers.DestroyCity)
+	cites.POST("/update", controllers.UpdateCity)
+	cites.GET("/indexCitesWithCountryID/:id", controllers.IndexCitesWithCountryID)
+
+	// ---------- Ads ------------ //
+	ads := r.Group("/ads")
+	ads.POST("/store", controllers.StoreAds)
+	ads.GET("/index", controllers.IndexAds)
+	ads.GET("/destroy/:id", controllers.DestroyAds)
+	ads.POST("/update", controllers.UpdateAds)
+	ads.GET("/IndexMainServiceAds/:id", controllers.IndexMainServiceAds)
+	ads.GET("/IndexSubServiceAds/:id", controllers.IndexSubServiceAds)
+
+	// ---------- App Intro ------------ //
+	appIntro := r.Group("/appIntro")
+	appIntro.POST("/store", controllers.StoreAppIntro)
+	appIntro.GET("/index", controllers.IndexAppIntro)
+	appIntro.GET("/destroy/:id", controllers.DestroyAppIntro)
+	appIntro.POST("/update", controllers.UpdateAppIntro)
+
+	// ---------- Notification ------------ //
+	notifications := r.Group("/notifications")
+	notifications.POST("/store", controllers.StoreNotification)
+	notifications.GET("/index", controllers.IndexNotification)
+	notifications.GET("/destroy/:id", controllers.DestroyNotification)
+	notifications.POST("/update", controllers.UpdateNotification)
+
 	r.Run(":8082")
 }

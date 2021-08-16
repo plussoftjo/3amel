@@ -83,31 +83,40 @@ func RegisterController(c *gin.Context) {
 
 // AppRegisterController ...
 func AppRegisterController(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	type RegisterData struct {
+		User     models.User     `json:"user"`
+		UserInfo models.UserInfo `json:"userInfo"`
+	}
+
+	var data RegisterData
+	if err := c.ShouldBindJSON(&data); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(data.User.Password), bcrypt.DefaultCost)
 	if err != nil {
 		panic(err)
 	}
-	user.Password = string(hashedPassword)
-	if err := config.DB.Create(&user).Error; err != nil {
+	data.User.Password = string(hashedPassword)
+	if err := config.DB.Create(&data.User).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": 101})
 		return
 	}
 
-	token, err := vendors.CreateToken(user.ID)
+	token, err := vendors.CreateToken(data.User.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	config.DB.Preload("Roles").Where("id = ?", user.ID).First(&user)
+	data.UserInfo.UserID = data.User.ID
+	config.DB.Create(&data.UserInfo)
 
-	c.JSON(http.StatusOK, gin.H{"user": user, "token": token})
+	var User models.User
+	config.DB.Preload("Roles").Preload("UserInfo").Where("id = ?", data.User.ID).First(&User)
+
+	c.JSON(http.StatusOK, gin.H{"user": User, "token": token})
 }
 
 // Auth ..
