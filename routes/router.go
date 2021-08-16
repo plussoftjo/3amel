@@ -102,6 +102,7 @@ func Setup() {
 	orders.GET("/inWork/index", controllers.IndexInWorkOrders)
 	orders.GET("/ending/index", controllers.IndexEndingOrders)
 	orders.GET("/viewOrder/:id", controllers.ViewOrder)
+	orders.POST("/approveFromController", controllers.OrderApproveFromController)
 
 	suppliers := r.Group("/suppliers")
 	suppliers.GET("/IndexNewSupplierJoinRequest", controllers.IndexNewSupplierJoinRequest)

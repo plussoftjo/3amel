@@ -2,6 +2,7 @@
 package controllers
 
 import (
+	"net/http"
 	"server/config"
 	"server/models"
 
@@ -96,4 +97,26 @@ func ViewOrder(c *gin.Context) {
 	config.DB.Where("id = ?", ID).Preload("User").Scopes(models.OrdersWithDetails).First(&order)
 
 	c.JSON(200, order)
+}
+
+// OrderApproveFromController ..
+func OrderApproveFromController(c *gin.Context) {
+	var data models.Orders
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var order models.Orders
+	config.DB.Where("id = ?", data.ID).First(&order)
+
+	order.Status = data.Status
+	order.SupplierID = data.SupplierID
+	order.Cost = data.Cost
+
+	config.DB.Save(&order)
+
+	c.JSON(200, gin.H{
+		"message": "Success",
+	})
 }
