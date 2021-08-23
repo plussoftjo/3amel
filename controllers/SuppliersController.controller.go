@@ -78,3 +78,12 @@ func IndexBlockListSupplier(c *gin.Context) {
 
 	c.JSON(200, users)
 }
+
+// IndexSupplierInfo ..
+func IndexSupplierInfo(c *gin.Context) {
+	var suppliersInfo []models.SupplierInfo
+
+	config.DB.Preload("User").Find(&suppliersInfo)
+
+	c.JSON(200, suppliersInfo)
+}

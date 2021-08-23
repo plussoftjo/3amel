@@ -2,11 +2,14 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"server/config"
 	"server/models"
+	"server/vendors"
 
 	"github.com/gin-gonic/gin"
+	expo "github.com/oliveroneill/exponent-server-sdk-golang/sdk"
 )
 
 // StoreOrder ..
@@ -115,6 +118,27 @@ func OrderApproveFromController(c *gin.Context) {
 	order.Cost = data.Cost
 
 	config.DB.Save(&order)
+
+	// Send Notification to the user
+	userID := order.UserID
+
+	var notificationToken models.NotificationsToken
+	config.DB.Where("user_id = ?", userID).First(&notificationToken)
+
+	var exponentTokens []expo.ExponentPushToken
+	pushToken, err := expo.NewExponentPushToken(notificationToken.Token)
+	if err != nil {
+		fmt.Println("Not Expo token")
+	}
+	exponentTokens = append(exponentTokens, pushToken)
+
+	vendors.SendNotification(exponentTokens, vendors.NotificationMessage{
+		Title: "تم تاكيد طلبك",
+		Body:  "الرجاء متابعة الطلب ومتابعة السعر",
+	}, vendors.NotificationData{
+		ServiceID:    "0",
+		SubServiceID: "0",
+	})
 
 	c.JSON(200, gin.H{
 		"message": "Success",

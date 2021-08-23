@@ -8,8 +8,8 @@ import (
 )
 
 type NotificationData struct {
-	Type string
-	ID   string
+	ServiceID    string
+	SubServiceID string
 }
 
 type NotificationMessage struct {
@@ -28,7 +28,7 @@ func SendNotification(tokens []expo.ExponentPushToken, message NotificationMessa
 		&expo.PushMessage{
 			To:       tokens,
 			Body:     message.Body,
-			Data:     map[string]string{"type": data.Type, "id": data.ID},
+			Data:     map[string]string{"serviceID": data.ServiceID, "subServiceID": data.SubServiceID},
 			Sound:    "default",
 			Title:    message.Title,
 			Priority: expo.DefaultPriority,

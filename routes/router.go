@@ -110,6 +110,7 @@ func Setup() {
 	suppliers.GET("/IndexBlockListSupplier", controllers.IndexBlockListSupplier)
 	suppliers.GET("/approve/:id", controllers.ApproveSupplier)
 	suppliers.GET("/block/:id", controllers.BlockSupplier)
+	suppliers.GET("/indexSupplierInfo", controllers.IndexSupplierInfo)
 
 	// ---------- Countries & Cites & Areas ------------ //
 	countries := r.Group("/countries")
@@ -147,6 +148,10 @@ func Setup() {
 	notifications.GET("/index", controllers.IndexNotification)
 	notifications.GET("/destroy/:id", controllers.DestroyNotification)
 	notifications.POST("/update", controllers.UpdateNotification)
+
+	// ---------- Notification ------------ //
+	notificationToken := r.Group("/notificationToken")
+	notificationToken.POST("/store", controllers.StoreNotificationsToken)
 
 	r.Run(":8082")
 }

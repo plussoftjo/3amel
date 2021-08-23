@@ -49,6 +49,10 @@ func SetupDB() {
 	database.AutoMigrate(&models.Ads{})
 	database.AutoMigrate(&models.AppIntro{})
 	database.AutoMigrate(&models.Notifications{})
+	database.AutoMigrate(&models.NotificationsToken{})
+
+	// Supplier
+	database.AutoMigrate(&models.SupplierInfo{})
 
 	DB = database
 }

@@ -11,8 +11,8 @@ type Notifications struct {
 	Title        string      `json:"title"`
 	Body         string      `json:"body"`
 	Data         string      `json:"data"`
-	ServiceID    uint        `json:"serviceID"`
-	SubServiceID uint        `json:"subServiceID" gorm:"default:0"`
+	ServiceID    int         `json:"serviceID"`
+	SubServiceID int         `json:"subServiceID" gorm:"default:0"`
 	Image        string      `json:"image"`
 	Service      Services    `json:"service"`
 	SubService   SubServices `json:"subService"`

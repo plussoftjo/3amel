@@ -2,11 +2,16 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"server/config"
 	"server/models"
+	"server/vendors"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+	expo "github.com/oliveroneill/exponent-server-sdk-golang/sdk"
 )
 
 // ------------- Services Options -------------//
@@ -156,13 +161,41 @@ func StoreNotification(c *gin.Context) {
 	}
 
 	config.DB.Where("id = ?", data.ID).Preload("Service").Preload("SubService").Find(&data)
+
+	var notificationTokens []models.NotificationsToken
+	config.DB.Find(&notificationTokens)
+
+	var exponentPushTokens []expo.ExponentPushToken
+
+	for _, notificationToken := range notificationTokens {
+		pushToken, err := expo.NewExponentPushToken(notificationToken.Token)
+		if err != nil {
+			fmt.Println("Not Expo token")
+		}
+		exponentPushTokens = append(exponentPushTokens, pushToken)
+	}
+
+	var message vendors.NotificationMessage
+	message.Body = data.Body
+	message.Title = data.Title
+
+	var notificationData vendors.NotificationData
+	notificationData.ServiceID = strconv.Itoa(data.ServiceID)
+	notificationData.SubServiceID = strconv.Itoa(data.SubServiceID)
+
+	vendors.SendNotification(exponentPushTokens, message, notificationData)
+
 	c.JSON(200, data)
 }
 
 // IndexNotification ..
 func IndexNotification(c *gin.Context) {
 	var data []models.Notifications
-	config.DB.Order("id desc").Preload("Service").Preload("SubService").Find(&data)
+	config.DB.Order("id desc").Preload("Service", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("ServiceOptions").Preload("SubServices")
+	}).Preload("SubService", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("ServiceOptions")
+	}).Find(&data)
 	c.JSON(200, data)
 }
 
