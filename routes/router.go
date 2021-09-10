@@ -48,6 +48,10 @@ func Setup() {
 	auth.POST("/checkHasPhone", controllers.CheckIfHasPhone)
 	auth.POST("/resetPassword", controllers.ResetPassword)
 
+	// ---- Worker Controller ---- //
+	auth.POST("/worker/login", controllers.WorkerLoginController)
+	auth.GET("/worker/auth", controllers.AuthWorker)
+
 	// --------- Basics ------- //
 	basics := r.Group("/basics")
 
@@ -111,6 +115,8 @@ func Setup() {
 	suppliers.GET("/approve/:id", controllers.ApproveSupplier)
 	suppliers.GET("/block/:id", controllers.BlockSupplier)
 	suppliers.GET("/indexSupplierInfo", controllers.IndexSupplierInfo)
+	suppliers.POST("/setSupplierInfo", controllers.SetSupplierInfo)
+	suppliers.GET("/indexOrdersForSupplier/:id", controllers.IndexOrdersForSupplier)
 
 	// ---------- Countries & Cites & Areas ------------ //
 	countries := r.Group("/countries")

@@ -280,6 +280,38 @@ func AuthAppUser(c *gin.Context) {
 	})
 }
 
+// AuthWorker ..
+func AuthWorker(c *gin.Context) {
+	user, err := AuthWithReturnUser(c.Request.Header["Authorization"][0])
+	if err != nil {
+		c.JSON(401, gin.H{
+			"error": "UnAuthorized",
+		})
+		return
+	}
+
+	var User models.User
+	config.DB.Where("id = ?", user.ID).First(&User)
+
+	// if user type ..
+	if User.UserType == 1 {
+		var Orders []models.Orders
+		config.DB.Scopes(models.OrdersWithDetails).Order("id desc").Where("supplier_id = ?", user.ID).Find(&Orders)
+
+		c.JSON(200, gin.H{
+			"user":   User,
+			"orders": Orders,
+		})
+		return
+	} else {
+		c.JSON(401, gin.H{
+			"error": "UnAuthorized",
+		})
+		return
+	}
+
+}
+
 // AppLoginController ...
 func AppLoginController(c *gin.Context) {
 
@@ -323,6 +355,63 @@ func AppLoginController(c *gin.Context) {
 		"token":  token,
 		"orders": Orders,
 	})
+}
+
+// WorkerLoginController ...
+func WorkerLoginController(c *gin.Context) {
+
+	var user models.User
+	var login models.Login
+	if err := c.ShouldBindJSON(&login); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// Check if have user
+	if err := config.DB.Preload("Roles").Where("phone = ?", login.Phone).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+			"code":    100,
+		})
+		return
+	}
+	// Check Password
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+			"code":    101,
+		})
+		return
+	}
+
+	token, err := vendors.CreateToken(user.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var User models.User
+	config.DB.Where("id = ?", user.ID).First(&User)
+
+	// if the worker type is 1
+	if User.UserType == 1 {
+		var Orders []models.Orders
+		config.DB.Scopes(models.OrdersWithDetails).Order("id desc").Where("supplier_id = ?", user.ID).Find(&Orders)
+
+		c.JSON(200, gin.H{
+			"user":   User,
+			"token":  token,
+			"orders": Orders,
+		})
+		return
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+			"code":    102,
+		})
+		return
+	}
+
 }
 
 // CheckIfHasPhone ..

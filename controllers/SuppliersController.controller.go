@@ -87,3 +87,55 @@ func IndexSupplierInfo(c *gin.Context) {
 
 	c.JSON(200, suppliersInfo)
 }
+
+// SetSupplierInfo ...
+func SetSupplierInfo(c *gin.Context) {
+	var data models.SupplierInfo
+
+	c.ShouldBindJSON(&data)
+
+	var supplierInfoCount int64
+	config.DB.Model(&models.SupplierInfo{}).Where("user_id = ?", data.UserID).Count(&supplierInfoCount)
+
+	if supplierInfoCount == 0 {
+		config.DB.Create(&data)
+	} else {
+		var supplierInfo models.SupplierInfo
+		if err := config.DB.Where("user_id = ?", data.UserID).First(&supplierInfo).Error; err != nil {
+			c.JSON(500, gin.H{
+				"code":  500,
+				"error": err,
+			})
+		}
+
+		supplierInfo.Latitude = data.Latitude
+		supplierInfo.Longitude = data.Longitude
+
+		config.DB.Model(&models.SupplierInfo{}).Save(&supplierInfo)
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Done",
+	})
+}
+
+// IndexOrdersForSupplier ..
+func IndexOrdersForSupplier(c *gin.Context) {
+
+	var ID = c.Param("id")
+
+	var newOrders []models.Orders
+	var inWorkOrders []models.Orders
+	var endingOrders []models.Orders
+
+	config.DB.Where("supplier_id = ?", ID).Where("status = ?", 0).Order("id desc").Find(&newOrders)
+	config.DB.Where("supplier_id = ?", ID).Where("status = ?", 1).Order("id desc").Find(&inWorkOrders)
+	config.DB.Where("supplier_id = ?", ID).Where("status = ?", 2).Order("id desc").Find(&endingOrders)
+
+	c.JSON(200, gin.H{
+		"newOrders":    newOrders,
+		"inWorkOrders": inWorkOrders,
+		"endingOrders": endingOrders,
+	})
+
+}
