@@ -2,10 +2,14 @@
 package controllers
 
 import (
+	"fmt"
+	"net/http"
 	"server/config"
 	"server/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // IndexNewSupplierJoinRequest ..
@@ -81,11 +85,61 @@ func IndexBlockListSupplier(c *gin.Context) {
 
 // IndexSupplierInfo ..
 func IndexSupplierInfo(c *gin.Context) {
-	var suppliersInfo []models.SupplierInfo
+	var users []models.User
 
-	config.DB.Preload("User").Find(&suppliersInfo)
+	config.DB.Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Service")
+	}).Find(&users)
 
-	c.JSON(200, suppliersInfo)
+	c.JSON(200, users)
+}
+
+// IndexSupplierInfoWithServiceID ..
+func IndexSupplierInfoWithServiceID(c *gin.Context) {
+	ID := c.Param("id")
+
+	var supplierInfosIDs []string
+	config.DB.Model(&models.SupplierInfo{}).Where("service_id = ?", ID).Pluck("id", &supplierInfosIDs)
+
+	var users []models.User
+	err := config.DB.Where("id IN (?)", supplierInfosIDs).Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Service")
+	}).Find(&users).Error
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+			"codes": 1001,
+		})
+		return
+	}
+
+	c.JSON(200, users)
+}
+
+// ShowSupplier ..
+func ShowSupplier(c *gin.Context) {
+	ID := c.Param("id")
+	// Get Supplier With Info
+	var supplier models.User
+	err := config.DB.Where("id = ?", ID).Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Service")
+	}).First(&supplier).Error
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+			"code":  500,
+		})
+		return
+	}
+
+	var orders []models.Orders
+	config.DB.Where("supplier_id = ?", ID).Scopes(models.OrdersWithDetails).Find(&orders)
+
+	c.JSON(200, gin.H{
+		"supplier": supplier,
+		"orders":   orders,
+	})
+
 }
 
 // SetSupplierInfo ...
@@ -136,6 +190,63 @@ func IndexOrdersForSupplier(c *gin.Context) {
 		"newOrders":    newOrders,
 		"inWorkOrders": inWorkOrders,
 		"endingOrders": endingOrders,
+	})
+
+}
+
+// IndexAllSupplier ..
+func IndexAllSupplier(c *gin.Context) {
+	var suppliers []models.User
+
+	config.DB.Where("user_type = ?", 2).Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Service")
+	}).Find(&suppliers)
+
+	c.JSON(200, suppliers)
+}
+
+// StoreSupplierUser ..
+func StoreSupplierUser(c *gin.Context) {
+	type StoreSupplierUserType struct {
+		User      models.User `json:"user"`
+		ServiceID uint        `json:"serviceID"`
+	}
+
+	var data StoreSupplierUserType
+	c.ShouldBindJSON(&data)
+
+	// Store The User
+	user := data.User
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	user.Password = string(hashedPassword)
+	if err := config.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	supplierInfo := models.SupplierInfo{
+		UserID:    user.ID,
+		Status:    0,
+		Latitude:  0,
+		Longitude: 0,
+		ServiceID: data.ServiceID,
+	}
+
+	supplierInfoStoreError := config.DB.Create(&supplierInfo).Error
+	if supplierInfoStoreError != nil {
+		c.JSON(500, gin.H{
+			"err": supplierInfoStoreError.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Success",
 	})
 
 }

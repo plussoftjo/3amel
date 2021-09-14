@@ -65,6 +65,9 @@ func Setup() {
 	user.POST("/roles/update", controllers.UpdateUserRole)
 	user.GET("/roles/index", controllers.IndexUserRoles)
 	user.GET("/roles/delete/:id", controllers.DeleteUserRole)
+
+	user.GET("/indexAllClients", controllers.IndexAllClients)
+
 	// --------------- Employ Controller ----------- //
 	user.POST("/employee/store", controllers.StoreEmployee)
 	user.GET("/employee/index", controllers.IndexEmployee)
@@ -115,8 +118,12 @@ func Setup() {
 	suppliers.GET("/approve/:id", controllers.ApproveSupplier)
 	suppliers.GET("/block/:id", controllers.BlockSupplier)
 	suppliers.GET("/indexSupplierInfo", controllers.IndexSupplierInfo)
+	suppliers.GET("/indexSupplierInfoWithServiceID/:id", controllers.IndexSupplierInfoWithServiceID)
+	suppliers.GET("/showSupplier/:id", controllers.ShowSupplier)
 	suppliers.POST("/setSupplierInfo", controllers.SetSupplierInfo)
 	suppliers.GET("/indexOrdersForSupplier/:id", controllers.IndexOrdersForSupplier)
+	suppliers.GET("/indexAllSuppliers", controllers.IndexAllSupplier)
+	suppliers.POST("/storeSupplierUser", controllers.StoreSupplierUser)
 
 	// ---------- Countries & Cites & Areas ------------ //
 	countries := r.Group("/countries")

@@ -169,3 +169,13 @@ func UpdateEmployee(c *gin.Context) {
 		"users": users,
 	})
 }
+
+// IndexAllClients ..
+func IndexAllClients(c *gin.Context) {
+	var users []models.User
+
+	config.DB.Where("user_type = ?", 1).Preload("UserInfo").Find(&users)
+
+	c.JSON(200, users)
+
+}
