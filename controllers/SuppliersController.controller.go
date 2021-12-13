@@ -88,7 +88,7 @@ func IndexSupplierInfo(c *gin.Context) {
 	var users []models.User
 
 	config.DB.Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
-		return db.Preload("Service")
+		return db.Preload("Service").Preload("Category")
 	}).Find(&users)
 
 	c.JSON(200, users)
@@ -99,11 +99,11 @@ func IndexSupplierInfoWithServiceID(c *gin.Context) {
 	ID := c.Param("id")
 
 	var supplierInfosIDs []string
-	config.DB.Model(&models.SupplierInfo{}).Where("service_id = ?", ID).Pluck("id", &supplierInfosIDs)
+	config.DB.Model(&models.SupplierInfo{}).Where("category_id = ?", ID).Pluck("id", &supplierInfosIDs)
 
 	var users []models.User
 	err := config.DB.Where("id IN (?)", supplierInfosIDs).Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
-		return db.Preload("Service")
+		return db.Preload("Service").Preload("Category")
 	}).Find(&users).Error
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -122,8 +122,8 @@ func ShowSupplier(c *gin.Context) {
 	// Get Supplier With Info
 	var supplier models.User
 	err := config.DB.Where("id = ?", ID).Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
-		return db.Preload("Service")
-	}).First(&supplier).Error
+		return db.Preload("Service").Preload("Category")
+	}).Preload("UserImages").First(&supplier).Error
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
@@ -199,7 +199,7 @@ func IndexAllSupplier(c *gin.Context) {
 	var suppliers []models.User
 
 	config.DB.Where("user_type = ?", 2).Preload("SupplierInfo", func(db *gorm.DB) *gorm.DB {
-		return db.Preload("Service")
+		return db.Preload("Service").Preload("Category")
 	}).Find(&suppliers)
 
 	c.JSON(200, suppliers)
@@ -208,8 +208,9 @@ func IndexAllSupplier(c *gin.Context) {
 // StoreSupplierUser ..
 func StoreSupplierUser(c *gin.Context) {
 	type StoreSupplierUserType struct {
-		User      models.User `json:"user"`
-		ServiceID uint        `json:"serviceID"`
+		User       models.User `json:"user"`
+		ServiceID  uint        `json:"serviceID"`
+		CategoryID uint        `json:"categoryID"`
 	}
 
 	var data StoreSupplierUserType
@@ -230,11 +231,12 @@ func StoreSupplierUser(c *gin.Context) {
 	}
 
 	supplierInfo := models.SupplierInfo{
-		UserID:    user.ID,
-		Status:    0,
-		Latitude:  0,
-		Longitude: 0,
-		ServiceID: data.ServiceID,
+		UserID:     user.ID,
+		Status:     0,
+		Latitude:   0,
+		Longitude:  0,
+		ServiceID:  data.ServiceID,
+		CategoryID: data.CategoryID,
 	}
 
 	supplierInfoStoreError := config.DB.Create(&supplierInfo).Error

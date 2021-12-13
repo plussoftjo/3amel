@@ -67,6 +67,9 @@ func Setup() {
 	user.GET("/roles/delete/:id", controllers.DeleteUserRole)
 
 	user.GET("/indexAllClients", controllers.IndexAllClients)
+	user.GET("/toggleStatus/:id", controllers.ClientToggleStatus)
+
+	user.GET("/showUser/:id", controllers.ShowUser)
 
 	// --------------- Employ Controller ----------- //
 	user.POST("/employee/store", controllers.StoreEmployee)
@@ -96,6 +99,13 @@ func Setup() {
 	servicesOptions.GET("/destroy/:id", controllers.DestroyServiceOptions)
 	servicesOptions.POST("/update", controllers.UpdateServicesOptions)
 
+	// Categories
+	categories := r.Group("/categories")
+	categories.POST("/store", controllers.StoreCategory)
+	categories.GET("/index", controllers.IndexCategories)
+	categories.GET("/destroy/:id", controllers.DeleteCategory)
+	categories.POST("/update", controllers.UpdateCategory)
+
 	// Application
 	application := r.Group("/app")
 	application.GET("/main/index", controllers.IndexMain)
@@ -108,8 +118,10 @@ func Setup() {
 	orders.GET("/new/index", controllers.IndexNewOrders)
 	orders.GET("/inWork/index", controllers.IndexInWorkOrders)
 	orders.GET("/ending/index", controllers.IndexEndingOrders)
+	orders.GET("/canceled/index", controllers.IndexCanceldOrders)
 	orders.GET("/viewOrder/:id", controllers.ViewOrder)
 	orders.POST("/approveFromController", controllers.OrderApproveFromController)
+	orders.GET("/cancelOrder/:id", controllers.CancelOrderFromController)
 
 	suppliers := r.Group("/suppliers")
 	suppliers.GET("/IndexNewSupplierJoinRequest", controllers.IndexNewSupplierJoinRequest)

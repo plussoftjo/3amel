@@ -93,11 +93,19 @@ func IndexEndingOrders(c *gin.Context) {
 	c.JSON(200, orders)
 }
 
+// IndexCanceldOrders ..
+func IndexCanceldOrders(c *gin.Context) {
+	var orders []models.Orders
+	config.DB.Scopes(models.OrdersWithDetails).Order("id desc").Where("status = ?", 3).Find(&orders)
+
+	c.JSON(200, orders)
+}
+
 // ShowOrder ..
 func ViewOrder(c *gin.Context) {
 	ID := c.Param("id")
 	var order models.Orders
-	config.DB.Where("id = ?", ID).Preload("User").Scopes(models.OrdersWithDetails).First(&order)
+	config.DB.Where("id = ?", ID).Preload("User").Preload("Supplier").Scopes(models.OrdersWithDetails).First(&order)
 
 	c.JSON(200, order)
 }
@@ -143,4 +151,33 @@ func OrderApproveFromController(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Success",
 	})
+}
+
+// CancelOrderFromController ..
+func CancelOrderFromController(c *gin.Context) {
+	ID := c.Param("id")
+
+	var order models.Orders
+	err := config.DB.Where("id = ?", ID).First(&order).Error
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	order.Status = 3
+
+	saveErr := config.DB.Save(&order).Error
+	if saveErr != nil {
+		c.JSON(500, gin.H{
+			"error": saveErr.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Cancel success",
+	})
+
 }

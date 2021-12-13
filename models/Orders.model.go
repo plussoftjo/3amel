@@ -8,7 +8,7 @@ import (
 
 // OrdersWithDetails ..
 func OrdersWithDetails(db *gorm.DB) *gorm.DB {
-	return db.Preload("Service").Preload("SubService").Preload("ServiceOptions")
+	return db.Preload("Service").Preload("SubService").Preload("ServiceOptions").Preload("User")
 }
 
 // Services ..
@@ -30,5 +30,6 @@ type Orders struct {
 	SubService        SubServices       `json:"subService"`
 	ServiceOptions    []ServicesOptions `json:"serviceOptions" gorm:"many2many:order_services_option;"`
 	User              User              `json:"user" gorm:"foreignKey:UserID;references:ID"`
+	Supplier          User              `json:"supplier" gorm:"foreignKey:SupplierID;references:ID"`
 	gorm.Model
 }

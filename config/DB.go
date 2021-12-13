@@ -29,6 +29,7 @@ func SetupDB() {
 	database.AutoMigrate(&models.AuthClients{})
 	database.AutoMigrate(&models.AuthTokens{})
 	database.AutoMigrate(&models.Roles{})
+	database.AutoMigrate(&models.UserImages{})
 
 	// Services
 	database.AutoMigrate(&models.Services{})
@@ -53,6 +54,8 @@ func SetupDB() {
 
 	// Supplier
 	database.AutoMigrate(&models.SupplierInfo{})
+
+	database.AutoMigrate(&models.Categories{})
 
 	DB = database
 }
